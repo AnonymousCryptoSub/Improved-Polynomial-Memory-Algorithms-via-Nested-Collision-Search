@@ -2,7 +2,7 @@
 
 This repository contains the implementation and experimental code accompanying the paper:
 
-    Improved Polynomial-Memory Attacks on Small-Secret LWE
+    Improved Polynomial-Memory Attacks on Small Max-Norm LWE
 
 The repository provides:
 - optimization scripts for the asymptotic complexity analysis,
