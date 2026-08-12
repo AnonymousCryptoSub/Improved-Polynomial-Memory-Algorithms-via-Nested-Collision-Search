@@ -13,7 +13,7 @@ import warnings
 # ============================================================================
 
 # Relative weight of the secret vector
-w1 = 0.667
+w = 0.667
 
 # Number of parallel processes
 Num_cores = 20
@@ -77,9 +77,9 @@ def r(x,y,z):
 # Variable Wrapper
 # ============================================================================
 
-set_vars = collections.namedtuple('LWE', ' thm_1 tm1_1 tm0_1 om1_1 om2_1 th_1 t1_1   o1_0 o2_0 z1_0 z2_0 z3_0 t1_0 t0_0 t0_1 o1_1 o2_1 z1_1 z2_1 z3_1 g b delta lmd')
+set_vars = collections.namedtuple('LWE', ' thm_1 tm1_1 tm0_1 om1_1 om2_1 th_1 t1_1   o1_0 o2_0 z1_0 z2_0 z3_0 t1_0 t0_0 t0_1 o1_1 o2_1 z1_1 z2_1 z3_1 g b delta_1 delta_2 lmd')
 
-num_params = 23
+num_params = 24
 
 
 def lwe(f) : return wrap(f, set_vars)
@@ -90,11 +90,10 @@ def lwe(f) : return wrap(f, set_vars)
 # Level-0 Parameters
 # ============================================================================
 
-w = lambda x : w1-x.delta
 
-n0_0 = lambda x : x.b * x.g * w(x)/2
-n1_0 = lambda x : x.g - x.b*x.g*w(x)
-n2_0 = lambda x : x.b * x.g * w(x)/2
+n0_0 = lambda x : x.b * x.g * (w/2-x.delta_2)
+n1_0 = lambda x : x.g - x.b*x.g* (w -x.delta_1 - x.delta_2)
+n2_0 = lambda x : x.b * x.g * (w/2-x.delta_1)
 
 
 # ============================================================================
@@ -145,12 +144,14 @@ R2 = lambda x : multiH(n_3_1(x), [x.thm_1, x.thm_1, n_3_1(x)/2-x.thm_1]) + multi
 
 
 ###  Exponent corresponding to the lower-level search domain.
-domain = lambda x : multiH(x.g,[n3_2(x), n_3_2(x), n2_2(x), n_2_2(x), n1_2(x), n_1_2(x)])+ multiH((1-x.g)/4, [(1-x.b*x.g)*w(x)/8,(1-x.b*x.g)*w(x)/8])
+domain = lambda x : multiH(x.g,[n3_2(x), n_3_2(x), n2_2(x), n_2_2(x), n1_2(x), n_1_2(x)])+ multiH((1-x.g)/4, [(1-x.b*x.g)*(w/2-x.delta_1)/4,(1-x.b*x.g)*(w/2-x.delta_2)/4])
+
 
 
 
 ### Exponent corresponding to the restricted secret domain.
-ss = lambda x : multiH(x.g,[x.b*x.g*w(x)/2 , x.b*x.g*w(x)/2]) + 4*multiH((1-x.g)/4,[(1-x.g*x.b)*w(x)/8,(1-x.g*x.b)*w(x)/8])
+ss = lambda x : multiH(x.g,[n0_0(x), n2_0(x)]) + 4*multiH( (1-x.g)/4,[(1-x.g*x.b)*(w/2-x.delta_1)/4,(1-x.g*x.b)*(w/2-x.delta_2)/4] )
+
 
 
 
@@ -162,12 +163,12 @@ def time(x):
 
     x = set_vars(*x)
     
-    if x.delta < 0.000001:
+    if max(x.delta_1, x.delta_2) < 0.000001:
         ISD =0
     else:
-        ISD = multiH(2,[1/3 + w1/2, 1/3 + w1/2]) - multiH(1,[w(x)/2, w(x)/2]) - multiH(1,[1/3 + x.delta/2, 1/3 + x.delta/2])
-
-    good_D = multiH(1, [w(x) / 2, w(x) / 2]) - ss(x)
+        ISD = multiH(2,[1/3 + w/2, 1/3 + w/2]) - multiH(1,[ w/2 - x.delta_1, w/2 - x.delta_2]) - multiH(1,[1/3 + x.delta_1, 1/3 + x.delta_2])
+        
+    good_D = multiH(1,[w/2 - x.delta_1, w/2 - x.delta_2]) - ss(x)
 
     good_R = max(0, domain(x) - R1(x))
 
@@ -200,13 +201,14 @@ constraints = [
     { 'type' : 'ineq',   'fun' : lwe(lambda x : domain(x) - 2*R2(x))},
 
     # Domain restriction
-    { 'type' : 'ineq',   'fun' : lwe(lambda x :  multiH(1,[w(x)/2,w(x)/2]) - ss(x))},
+    { 'type' : 'ineq',   'fun' : lwe(lambda x :  multiH(1,[w/2-x.delta_1, w/2-x.delta_2]) - ss(x))},
 
     # Feasibility condition
-    { 'type' : 'ineq',   'fun' : lwe(lambda x : (1-x.g)/4 - (1-x.g*x.b)*w(x)/4)},
+    { 'type' : 'ineq',   'fun' : lwe(lambda x : (1-x.g)/4 - (1-x.g*x.b)*(w-x.delta_1-x.delta_2)/4)},
     
-    { 'type' : 'ineq',   'fun' : lwe(lambda x : w(x))},
+    { 'type' : 'ineq',   'fun' : lwe(lambda x : w/2-x.delta_1)},
     
+    { 'type' : 'ineq',   'fun' : lwe(lambda x : w/2-x.delta_2)},
 
     # ========================================================================
     # Constraints in Level 0
@@ -280,9 +282,11 @@ def single_optimization_run(run_id):
         category=RuntimeWarning,
         module="scipy.optimize"
     )
-    start = [ru(0, 0.009) for _ in range(20)] + [ru(0.5, 0.9) for _ in range(3)] + [ru(0.01,0.1)]
 
-    bounds=[(0.,0.1)]*7+[(0.,0.1)]*13+[(.01,1)]*2 + [(0,1)]+[(0,0.5)]
+    start = [ru(0, 0.009) for _ in range(20)] + [ru(0.5, 0.9) for _ in range(2)] +[ru(0.1, 0.5) for _ in range(2)] + [ru(0.01,0.1)]
+
+    bounds=[(0.,0.1)]*7+[(0.,0.1)]*13+[(.01,1)]*2 + [(0,0.5)]*2+[(0,0.5)]
+
     
     result = minimize(time, start, 
                       bounds=bounds, tol=1e-9, 
