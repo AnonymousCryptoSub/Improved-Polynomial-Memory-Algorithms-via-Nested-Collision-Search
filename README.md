@@ -13,12 +13,11 @@ The repository provides:
 
 # Overview
 
-This work improves the Memory-Efficient Attacks on Small LWE Keys introduced by Esser et al. (ASIACRYPT 2023).
+This work develops an improved polynomial-memory nested collision-search framework building upon the frameworks of Esser et al. (ASIACRYPT 2023) for small max-norm LWE and Esser and May (EUROCRYPT 2020) for the random subset-sum problem.
 
-The main contributions include:
-- an improved nested collision-search framework,
-- the new Shifted-3 and the unified Hybrid instantiation,
-- and the improved framework for the random subset-sum problem (RSSP).
+For ternary LWE, the proposed framework improves the asymptotic polynomial-memory complexity runtime exponent for balanced secrets from 0.926 to 0.8595.
+
+The framework also applies to the random subset-sum problem. For the balanced RSSP at density one, it improves the polynomial-memory complexity exponent from 0.645 to 0.6432.
 
 -------------------------------------------------------------------------------
 
