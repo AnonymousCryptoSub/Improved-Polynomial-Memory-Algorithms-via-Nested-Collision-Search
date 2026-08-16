@@ -1,8 +1,8 @@
-# Improved Polynomial-Memory Attacks on Small-Secret LWE
+# Improved Polynomial-Memory Algorithms via Nested Collision Search
 
 This repository contains the implementation and experimental code accompanying the paper:
 
-    Improved Polynomial-Memory Attacks on Small Max-Norm LWE
+    Improved Polynomial-Memory Algorithms via Nested Collision Search: Application to Ternary LWE and Subset Sum
 
 The repository provides:
 - optimization scripts for the asymptotic complexity analysis,
@@ -17,8 +17,8 @@ This work improves the Memory-Efficient Attacks on Small LWE Keys introduced by 
 
 The main contributions include:
 - an improved nested collision-search framework,
-- the new Shifted-3 instantiation,
-- and the unified Hybrid instantiation.
+- the new Shifted-3 and the unified Hybrid instantiation,
+- and the improved framework for the random subset-sum problem (RSSP).
 
 -------------------------------------------------------------------------------
 
@@ -97,4 +97,6 @@ This work builds upon the nested collision-search framework introduced by:
 - Esser, Girme, Mukherjee, and Sarkar,
   Memory-Efficient Attacks on Small LWE Keys,
   ASIACRYPT 2023.
+- Esser and May, Low Weight Discrete Logarithm and Subset Sum in 2^{0.65n} with Polynomial Memory,
+  EUROCRYPT 2020.
 
